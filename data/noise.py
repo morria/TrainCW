@@ -4,7 +4,6 @@ Noise generation for CW training data.
 
 import numpy as np
 import scipy.signal
-from typing import Optional
 
 
 def add_white_noise(audio: np.ndarray, snr_db: float) -> np.ndarray:
@@ -19,7 +18,7 @@ def add_white_noise(audio: np.ndarray, snr_db: float) -> np.ndarray:
         Audio with added noise
     """
     # Calculate signal power
-    signal_power = np.mean(audio ** 2)
+    signal_power = np.mean(audio**2)
 
     # Calculate noise power needed for target SNR
     # SNR_dB = 10 * log10(P_signal / P_noise)
@@ -80,7 +79,7 @@ def add_pink_noise(audio: np.ndarray, snr_db: float) -> np.ndarray:
         Audio with added pink noise
     """
     # Calculate signal power
-    signal_power = np.mean(audio ** 2)
+    signal_power = np.mean(audio**2)
 
     # Calculate noise power needed for target SNR
     noise_power = signal_power / (10 ** (snr_db / 10))
@@ -89,14 +88,14 @@ def add_pink_noise(audio: np.ndarray, snr_db: float) -> np.ndarray:
     noise = generate_pink_noise(len(audio))
 
     # Scale to desired power
-    noise = noise * np.sqrt(noise_power / np.mean(noise ** 2))
+    noise = noise * np.sqrt(noise_power / np.mean(noise**2))
 
     return audio + noise
 
 
-def add_band_limited_noise(audio: np.ndarray, snr_db: float,
-                          center_freq: float, bandwidth: float,
-                          sample_rate: int = 16000) -> np.ndarray:
+def add_band_limited_noise(
+    audio: np.ndarray, snr_db: float, center_freq: float, bandwidth: float, sample_rate: int = 16000
+) -> np.ndarray:
     """
     Add band-limited noise around signal frequency.
 
@@ -118,16 +117,15 @@ def add_band_limited_noise(audio: np.ndarray, snr_db: float,
     high_freq = min(sample_rate / 2 - 1, center_freq + bandwidth)
 
     # Butterworth bandpass filter
-    sos = scipy.signal.butter(4, [low_freq, high_freq], btype='band',
-                            fs=sample_rate, output='sos')
+    sos = scipy.signal.butter(4, [low_freq, high_freq], btype="band", fs=sample_rate, output="sos")
     filtered_noise = scipy.signal.sosfilt(sos, noise)
 
     # Calculate signal power
-    signal_power = np.mean(audio ** 2)
+    signal_power = np.mean(audio**2)
 
     # Scale noise to achieve target SNR
     noise_power = signal_power / (10 ** (snr_db / 10))
-    filtered_noise = filtered_noise * np.sqrt(noise_power / np.mean(filtered_noise ** 2))
+    filtered_noise = filtered_noise * np.sqrt(noise_power / np.mean(filtered_noise**2))
 
     return audio + filtered_noise
 
@@ -161,15 +159,16 @@ def sample_snr(phase: int = 3) -> float:
         elif choice < 0.70:
             return np.random.uniform(10, 15)  # Fair
         elif choice < 0.85:
-            return np.random.uniform(5, 10)   # Poor
+            return np.random.uniform(5, 10)  # Poor
         elif choice < 0.95:
-            return np.random.uniform(0, 5)    # Very Poor
+            return np.random.uniform(0, 5)  # Very Poor
         else:
-            return np.random.uniform(-5, 0)   # Barely Readable
+            return np.random.uniform(-5, 0)  # Barely Readable
 
 
-def add_noise(audio: np.ndarray, snr_db: float, center_freq: float,
-             sample_rate: int = 16000) -> np.ndarray:
+def add_noise(
+    audio: np.ndarray, snr_db: float, center_freq: float, sample_rate: int = 16000
+) -> np.ndarray:
     """
     Add noise to audio based on random selection of noise types.
 
@@ -193,15 +192,20 @@ def add_noise(audio: np.ndarray, snr_db: float, center_freq: float,
     # 30% chance of band-limited noise
     if np.random.random() < 0.30:
         bandwidth = np.random.uniform(200, 500)
-        audio_noisy = add_band_limited_noise(audio_noisy, snr_db + 3,
-                                            center_freq, bandwidth, sample_rate)
+        audio_noisy = add_band_limited_noise(
+            audio_noisy, snr_db + 3, center_freq, bandwidth, sample_rate
+        )
 
     return audio_noisy
 
 
-def generate_impulse_noise(duration: float, sample_rate: int,
-                          impulse_rate: float, impulse_duration: float = 0.03,
-                          impulse_amplitude: float = 10.0) -> np.ndarray:
+def generate_impulse_noise(
+    duration: float,
+    sample_rate: int,
+    impulse_rate: float,
+    impulse_duration: float = 0.03,
+    impulse_amplitude: float = 10.0,
+) -> np.ndarray:
     """
     Generate QRN-style impulse noise (static crashes).
 
@@ -238,7 +242,7 @@ def generate_impulse_noise(duration: float, sample_rate: int,
 
         # Add impulse
         impulse = np.random.randn(impulse_samples) * envelope * amplitude
-        noise[pos:pos+impulse_samples] += impulse
+        noise[pos : pos + impulse_samples] += impulse
 
     return noise
 

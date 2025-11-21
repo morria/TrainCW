@@ -2,11 +2,10 @@
 PyTorch Dataset classes for CW training data.
 """
 
+import librosa
+import numpy as np
 import torch
 import torch.utils.data
-import numpy as np
-import librosa
-from typing import Dict, Optional, Tuple
 
 from .generator import generate_training_sample
 
@@ -19,14 +18,16 @@ class CWDataset(torch.utils.data.IterableDataset):
     sees new variations. Implements curriculum learning phases.
     """
 
-    def __init__(self,
-                 samples_per_epoch: int = 10000,
-                 phase: int = 3,
-                 sample_rate: int = 16000,
-                 n_mels: int = 64,
-                 n_fft: int = 512,
-                 hop_length: int = 160,
-                 seed: Optional[int] = None):
+    def __init__(
+        self,
+        samples_per_epoch: int = 10000,
+        phase: int = 3,
+        sample_rate: int = 16000,
+        n_mels: int = 64,
+        n_fft: int = 512,
+        hop_length: int = 160,
+        seed: int | None = None,
+    ):
         """
         Initialize CW dataset.
 
@@ -52,13 +53,13 @@ class CWDataset(torch.utils.data.IterableDataset):
         self.char_to_idx = self._build_vocabulary()
         self.idx_to_char = {v: k for k, v in self.char_to_idx.items()}
 
-    def _build_vocabulary(self) -> Dict[str, int]:
+    def _build_vocabulary(self) -> dict[str, int]:
         """Build character to index mapping."""
-        chars = list('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?/ ')
+        chars = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,?/ ")
         # Add prosigns
-        chars.extend(['<AR>', '<SK>', '<BT>', '<KN>'])
+        chars.extend(["<AR>", "<SK>", "<BT>", "<KN>"])
         # Add blank for CTC
-        chars.append('<blank>')
+        chars.append("<blank>")
 
         return {char: idx for idx, char in enumerate(chars)}
 
@@ -77,9 +78,9 @@ class CWDataset(torch.utils.data.IterableDataset):
         while i < len(text):
             # Check for 2-char prosigns
             if i < len(text) - 1:
-                two_char = text[i:i+2].upper()
-                if f'<{two_char}>' in self.char_to_idx:
-                    indices.append(self.char_to_idx[f'<{two_char}>'])
+                two_char = text[i : i + 2].upper()
+                if f"<{two_char}>" in self.char_to_idx:
+                    indices.append(self.char_to_idx[f"<{two_char}>"])
                     i += 2
                     continue
 
@@ -112,14 +113,16 @@ class CWDataset(torch.utils.data.IterableDataset):
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             fmin=0,
-            fmax=self.sample_rate // 2
+            fmax=self.sample_rate // 2,
         )
 
         # Convert to log scale (dB)
         mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
 
         # Normalize to [0, 1]
-        mel_spec_normalized = (mel_spec_db - mel_spec_db.min()) / (mel_spec_db.max() - mel_spec_db.min() + 1e-8)
+        mel_spec_normalized = (mel_spec_db - mel_spec_db.min()) / (
+            mel_spec_db.max() - mel_spec_db.min() + 1e-8
+        )
 
         return mel_spec_normalized
 
@@ -128,17 +131,13 @@ class CWDataset(torch.utils.data.IterableDataset):
         # Set worker seed for reproducibility
         if self.seed is not None:
             worker_info = torch.utils.data.get_worker_info()
-            if worker_info is not None:
-                seed = self.seed + worker_info.id
-            else:
-                seed = self.seed
+            seed = self.seed + worker_info.id if worker_info is not None else self.seed
             np.random.seed(seed)
 
         for _ in range(self.samples_per_epoch):
             # Generate audio sample
             audio, text, metadata = generate_training_sample(
-                phase=self.phase,
-                sample_rate=self.sample_rate
+                phase=self.phase, sample_rate=self.sample_rate
             )
 
             # Compute spectrogram
@@ -152,11 +151,11 @@ class CWDataset(torch.utils.data.IterableDataset):
 
             # Return (spectrogram, text_indices, text_length, text_string)
             yield {
-                'spectrogram': spectrogram_tensor,
-                'text_indices': text_indices,
-                'text_length': len(text_indices),
-                'text': text,
-                'metadata': metadata
+                "spectrogram": spectrogram_tensor,
+                "text_indices": text_indices,
+                "text_length": len(text_indices),
+                "text": text,
+                "metadata": metadata,
             }
 
     def __len__(self):
@@ -172,8 +171,14 @@ class CWTestDataset(torch.utils.data.Dataset):
     for consistent evaluation across epochs.
     """
 
-    def __init__(self, data_path: str, sample_rate: int = 16000,
-                 n_mels: int = 64, n_fft: int = 512, hop_length: int = 160):
+    def __init__(
+        self,
+        data_path: str,
+        sample_rate: int = 16000,
+        n_mels: int = 64,
+        n_fft: int = 512,
+        hop_length: int = 160,
+    ):
         """
         Initialize test dataset.
 
@@ -202,7 +207,9 @@ class CWTestDataset(torch.utils.data.Dataset):
     def _load_data(self):
         """Load pre-generated test data."""
         import pickle
-        with open(self.data_path, 'rb') as f:
+        from pathlib import Path
+
+        with Path(self.data_path).open("rb") as f:
             data = pickle.load(f)
         return data
 
@@ -215,11 +222,13 @@ class CWTestDataset(torch.utils.data.Dataset):
             n_fft=self.n_fft,
             hop_length=self.hop_length,
             fmin=0,
-            fmax=self.sample_rate // 2
+            fmax=self.sample_rate // 2,
         )
 
         mel_spec_db = librosa.power_to_db(mel_spec, ref=np.max)
-        mel_spec_normalized = (mel_spec_db - mel_spec_db.min()) / (mel_spec_db.max() - mel_spec_db.min() + 1e-8)
+        mel_spec_normalized = (mel_spec_db - mel_spec_db.min()) / (
+            mel_spec_db.max() - mel_spec_db.min() + 1e-8
+        )
 
         return mel_spec_normalized
 
@@ -229,9 +238,9 @@ class CWTestDataset(torch.utils.data.Dataset):
         i = 0
         while i < len(text):
             if i < len(text) - 1:
-                two_char = text[i:i+2].upper()
-                if f'<{two_char}>' in self.char_to_idx:
-                    indices.append(self.char_to_idx[f'<{two_char}>'])
+                two_char = text[i : i + 2].upper()
+                if f"<{two_char}>" in self.char_to_idx:
+                    indices.append(self.char_to_idx[f"<{two_char}>"])
                     i += 2
                     continue
 
@@ -246,7 +255,7 @@ class CWTestDataset(torch.utils.data.Dataset):
         """Return dataset size."""
         return len(self.samples)
 
-    def __getitem__(self, idx: int) -> Dict:
+    def __getitem__(self, idx: int) -> dict:
         """Get a sample by index."""
         audio, text, metadata = self.samples[idx]
 
@@ -258,11 +267,11 @@ class CWTestDataset(torch.utils.data.Dataset):
         text_indices = self.text_to_indices(text)
 
         return {
-            'spectrogram': spectrogram_tensor,
-            'text_indices': text_indices,
-            'text_length': len(text_indices),
-            'text': text,
-            'metadata': metadata
+            "spectrogram": spectrogram_tensor,
+            "text_indices": text_indices,
+            "text_length": len(text_indices),
+            "text": text,
+            "metadata": metadata,
         }
 
 
@@ -277,11 +286,11 @@ def collate_fn(batch):
         Batched tensors with padding
     """
     # Find max lengths
-    max_spec_len = max(sample['spectrogram'].shape[0] for sample in batch)
-    max_text_len = max(sample['text_length'] for sample in batch)
+    max_spec_len = max(sample["spectrogram"].shape[0] for sample in batch)
+    max_text_len = max(sample["text_length"] for sample in batch)
 
     batch_size = len(batch)
-    n_mels = batch[0]['spectrogram'].shape[1]
+    n_mels = batch[0]["spectrogram"].shape[1]
 
     # Prepare padded tensors
     spectrograms = torch.zeros(batch_size, max_spec_len, n_mels)
@@ -294,24 +303,24 @@ def collate_fn(batch):
     metadata_list = []
 
     for i, sample in enumerate(batch):
-        spec = sample['spectrogram']
+        spec = sample["spectrogram"]
         spec_len = spec.shape[0]
         spectrograms[i, :spec_len, :] = spec
         spec_lengths[i] = spec_len
 
-        text_idx = sample['text_indices']
+        text_idx = sample["text_indices"]
         text_len = len(text_idx)
         text_indices[i, :text_len] = text_idx
         text_lengths[i] = text_len
 
-        texts.append(sample['text'])
-        metadata_list.append(sample['metadata'])
+        texts.append(sample["text"])
+        metadata_list.append(sample["metadata"])
 
     return {
-        'spectrograms': spectrograms,
-        'spec_lengths': spec_lengths,
-        'text_indices': text_indices,
-        'text_lengths': text_lengths,
-        'texts': texts,
-        'metadata': metadata_list
+        "spectrograms": spectrograms,
+        "spec_lengths": spec_lengths,
+        "text_indices": text_indices,
+        "text_lengths": text_lengths,
+        "texts": texts,
+        "metadata": metadata_list,
     }

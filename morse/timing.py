@@ -3,7 +3,6 @@ Morse code timing calculations and WPM conversions.
 """
 
 import numpy as np
-from typing import Dict, Optional
 
 
 def WPM_TO_UNIT_TIME(wpm: float) -> float:
@@ -27,7 +26,7 @@ class TimingCalculator:
     Calculate morse code timing with support for variance and imperfections.
     """
 
-    def __init__(self, wpm: float, timing_variance: Optional[Dict[str, float]] = None):
+    def __init__(self, wpm: float, timing_variance: dict[str, float] | None = None):
         """
         Initialize timing calculator.
 
@@ -50,10 +49,10 @@ class TimingCalculator:
 
         # Apply variance if provided
         if timing_variance:
-            self.dit_dah_ratio = timing_variance.get('dit_dah_ratio', 3.0)
-            self.element_gap_variance = timing_variance.get('element_gap_variance', 0.0)
-            self.char_gap_variance = timing_variance.get('char_gap_variance', 0.0)
-            self.word_gap_variance = timing_variance.get('word_gap_variance', 0.0)
+            self.dit_dah_ratio = timing_variance.get("dit_dah_ratio", 3.0)
+            self.element_gap_variance = timing_variance.get("element_gap_variance", 0.0)
+            self.char_gap_variance = timing_variance.get("char_gap_variance", 0.0)
+            self.word_gap_variance = timing_variance.get("word_gap_variance", 0.0)
 
     def get_dit_duration(self) -> float:
         """Get dit duration in seconds."""
@@ -94,61 +93,62 @@ class TimingCalculator:
         timing_sequence = []
 
         for element_type, _ in elements:
-            if element_type == 'dit':
+            if element_type == "dit":
                 timing_sequence.append((self.get_dit_duration(), True))
-            elif element_type == 'dah':
+            elif element_type == "dah":
                 timing_sequence.append((self.get_dah_duration(), True))
-            elif element_type == 'element_gap':
+            elif element_type == "element_gap":
                 timing_sequence.append((self.get_element_gap_duration(), False))
-            elif element_type == 'char_gap':
+            elif element_type == "char_gap":
                 timing_sequence.append((self.get_char_gap_duration(), False))
-            elif element_type == 'word_gap':
+            elif element_type == "word_gap":
                 timing_sequence.append((self.get_word_gap_duration(), False))
 
         return timing_sequence
 
 
-def select_operator_style() -> Dict[str, float]:
+def select_operator_style() -> dict[str, float]:
     """
     Randomly select an operator sending style with realistic timing variance.
 
     Returns:
         Dict with timing variance parameters
     """
-    style = np.random.choice(['clean', 'typical', 'rushed', 'stretched'],
-                            p=[0.50, 0.30, 0.15, 0.05])
+    style = np.random.choice(
+        ["clean", "typical", "rushed", "stretched"], p=[0.50, 0.30, 0.15, 0.05]
+    )
 
-    if style == 'clean':
+    if style == "clean":
         # Clean sender (±10% variance)
         return {
-            'dit_dah_ratio': np.random.normal(3.0, 0.1),
-            'element_gap_variance': np.random.uniform(0.0, 0.10),
-            'char_gap_variance': np.random.uniform(0.0, 0.10),
-            'word_gap_variance': np.random.uniform(0.0, 0.10),
+            "dit_dah_ratio": np.random.normal(3.0, 0.1),
+            "element_gap_variance": np.random.uniform(0.0, 0.10),
+            "char_gap_variance": np.random.uniform(0.0, 0.10),
+            "word_gap_variance": np.random.uniform(0.0, 0.10),
         }
-    elif style == 'typical':
+    elif style == "typical":
         # Typical operator (±20% variance)
         return {
-            'dit_dah_ratio': np.random.normal(3.0, 0.2),
-            'element_gap_variance': np.random.uniform(0.10, 0.20),
-            'char_gap_variance': np.random.uniform(0.10, 0.20),
-            'word_gap_variance': np.random.uniform(0.05, 0.15),
+            "dit_dah_ratio": np.random.normal(3.0, 0.2),
+            "element_gap_variance": np.random.uniform(0.10, 0.20),
+            "char_gap_variance": np.random.uniform(0.10, 0.20),
+            "word_gap_variance": np.random.uniform(0.05, 0.15),
         }
-    elif style == 'rushed':
+    elif style == "rushed":
         # Rushed/sloppy (±30% variance, compressed gaps)
         return {
-            'dit_dah_ratio': np.random.normal(2.8, 0.3),  # Shorter dahs
-            'element_gap_variance': np.random.uniform(0.20, 0.35),
-            'char_gap_variance': np.random.uniform(-0.30, 0.10),  # Compressed
-            'word_gap_variance': np.random.uniform(-0.25, 0.10),  # Compressed
+            "dit_dah_ratio": np.random.normal(2.8, 0.3),  # Shorter dahs
+            "element_gap_variance": np.random.uniform(0.20, 0.35),
+            "char_gap_variance": np.random.uniform(-0.30, 0.10),  # Compressed
+            "word_gap_variance": np.random.uniform(-0.25, 0.10),  # Compressed
         }
     else:  # stretched
         # Stretched style (longer dahs, wider spacing)
         return {
-            'dit_dah_ratio': np.random.normal(3.3, 0.2),  # Longer dahs
-            'element_gap_variance': np.random.uniform(0.05, 0.15),
-            'char_gap_variance': np.random.uniform(0.15, 0.30),  # Wider gaps
-            'word_gap_variance': np.random.uniform(0.10, 0.25),
+            "dit_dah_ratio": np.random.normal(3.3, 0.2),  # Longer dahs
+            "element_gap_variance": np.random.uniform(0.05, 0.15),
+            "char_gap_variance": np.random.uniform(0.15, 0.30),  # Wider gaps
+            "word_gap_variance": np.random.uniform(0.10, 0.25),
         }
 
 

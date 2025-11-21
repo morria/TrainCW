@@ -3,12 +3,15 @@ Audio tone synthesis for CW signals.
 """
 
 import numpy as np
-from typing import List, Tuple, Optional
-import scipy.signal
 
 
-def generate_envelope(n_samples: int, rise_time: float, fall_time: float,
-                     sample_rate: int, envelope_type: str = 'linear') -> np.ndarray:
+def generate_envelope(
+    n_samples: int,
+    rise_time: float,
+    fall_time: float,
+    sample_rate: int,
+    envelope_type: str = "linear",
+) -> np.ndarray:
     """
     Generate amplitude envelope for keying.
 
@@ -32,21 +35,21 @@ def generate_envelope(n_samples: int, rise_time: float, fall_time: float,
         rise_samples = n_samples // 2
         fall_samples = n_samples - rise_samples
 
-    if envelope_type == 'linear':
+    if envelope_type == "linear":
         # Linear rise and fall
         if rise_samples > 0:
             envelope[:rise_samples] = np.linspace(0, 1, rise_samples)
         if fall_samples > 0:
             envelope[-fall_samples:] = np.linspace(1, 0, fall_samples)
 
-    elif envelope_type == 'cosine':
+    elif envelope_type == "cosine":
         # Raised cosine (smoother)
         if rise_samples > 0:
             envelope[:rise_samples] = 0.5 * (1 - np.cos(np.pi * np.linspace(0, 1, rise_samples)))
         if fall_samples > 0:
             envelope[-fall_samples:] = 0.5 * (1 + np.cos(np.pi * np.linspace(0, 1, fall_samples)))
 
-    elif envelope_type == 'adsr':
+    elif envelope_type == "adsr":
         # ADSR: Attack-Decay-Sustain-Release
         attack_samples = rise_samples
         decay_samples = min(rise_samples, n_samples // 10)
@@ -73,9 +76,15 @@ def generate_envelope(n_samples: int, rise_time: float, fall_time: float,
     return envelope
 
 
-def generate_tone(frequency: float, duration: float, sample_rate: int,
-                 rise_time: float = 0.003, fall_time: float = 0.003,
-                 envelope_type: str = 'linear', phase: float = 0.0) -> np.ndarray:
+def generate_tone(
+    frequency: float,
+    duration: float,
+    sample_rate: int,
+    rise_time: float = 0.003,
+    fall_time: float = 0.003,
+    envelope_type: str = "linear",
+    phase: float = 0.0,
+) -> np.ndarray:
     """
     Generate a single CW tone with envelope.
 
@@ -104,14 +113,16 @@ def generate_tone(frequency: float, duration: float, sample_rate: int,
     return tone
 
 
-def generate_cw_audio(timing_sequence: List[Tuple[float, bool]],
-                     frequency: float,
-                     sample_rate: int = 16000,
-                     rise_time: Optional[float] = None,
-                     fall_time: Optional[float] = None,
-                     envelope_type: str = 'linear',
-                     frequency_drift: float = 0.0,
-                     chirp_amount: float = 0.0) -> np.ndarray:
+def generate_cw_audio(
+    timing_sequence: list[tuple[float, bool]],
+    frequency: float,
+    sample_rate: int = 16000,
+    rise_time: float | None = None,
+    fall_time: float | None = None,
+    envelope_type: str = "linear",
+    frequency_drift: float = 0.0,
+    chirp_amount: float = 0.0,
+) -> np.ndarray:
     """
     Generate complete CW audio from timing sequence.
 
@@ -169,8 +180,9 @@ def generate_cw_audio(timing_sequence: List[Tuple[float, bool]],
                 phase = (phase + 2 * np.pi * current_freq * duration) % (2 * np.pi)
 
             # Apply envelope
-            envelope = generate_envelope(n_samples, rise_time, fall_time,
-                                        sample_rate, envelope_type)
+            envelope = generate_envelope(
+                n_samples, rise_time, fall_time, sample_rate, envelope_type
+            )
             tone = tone * envelope
 
             audio_segments.append(tone)
@@ -209,8 +221,7 @@ def sample_envelope_type() -> str:
     Returns:
         Envelope type string
     """
-    return np.random.choice(['linear', 'cosine', 'adsr'],
-                           p=[0.60, 0.30, 0.10])
+    return np.random.choice(["linear", "cosine", "adsr"], p=[0.60, 0.30, 0.10])
 
 
 def sample_frequency(phase: int = 3) -> float:
@@ -238,8 +249,7 @@ def sample_frequency(phase: int = 3) -> float:
             return np.random.uniform(800, 900)
 
 
-def apply_frequency_drift(audio: np.ndarray, sample_rate: int,
-                         base_frequency: float) -> np.ndarray:
+def apply_frequency_drift(audio: np.ndarray, sample_rate: int, base_frequency: float) -> np.ndarray:
     """
     Apply frequency drift to existing audio (post-processing simulation).
 

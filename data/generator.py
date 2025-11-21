@@ -3,22 +3,31 @@ Main training sample generator - brings all components together.
 """
 
 import numpy as np
-from typing import Dict, Tuple, Optional
-
 from morse.morse_code import MorseCode
-from morse.timing import (TimingCalculator, sample_wpm, select_operator_style,
-                          WPM_TO_UNIT_TIME)
-from .audio_synthesis import (generate_cw_audio, sample_frequency,
-                              sample_envelope_type, sample_rise_fall_time,
-                              sample_frequency_drift_amount, sample_chirp_amount)
-from .noise import sample_snr, add_noise, add_impulse_noise
-from .interference import (add_qrm, apply_fading, apply_agc_pumping,
-                          apply_clipping, apply_bandpass_filter)
+from morse.timing import TimingCalculator, sample_wpm, select_operator_style
+
+from .audio_synthesis import (
+    generate_cw_audio,
+    sample_chirp_amount,
+    sample_envelope_type,
+    sample_frequency,
+    sample_frequency_drift_amount,
+    sample_rise_fall_time,
+)
+from .interference import (
+    add_qrm,
+    apply_agc_pumping,
+    apply_bandpass_filter,
+    apply_clipping,
+    apply_fading,
+)
+from .noise import add_impulse_noise, add_noise, sample_snr
 from .text_generator import generate_random_text, sample_text_length
 
 
-def generate_training_sample(phase: int = 3, sample_rate: int = 16000,
-                            max_duration: float = 2.0) -> Tuple[np.ndarray, str, Dict]:
+def generate_training_sample(
+    phase: int = 3, sample_rate: int = 16000, max_duration: float = 2.0
+) -> tuple[np.ndarray, str, dict]:
     """
     Generate one complete training sample with all augmentations.
 
@@ -56,7 +65,6 @@ def generate_training_sample(phase: int = 3, sample_rate: int = 16000,
         truncated_sequence = []
         truncated_text = []
 
-        char_idx = 0
         for i, (duration, is_on) in enumerate(timing_sequence):
             if current_duration + duration > max_duration:
                 break
@@ -66,11 +74,13 @@ def generate_training_sample(phase: int = 3, sample_rate: int = 16000,
             # Track which character we're at
             if i < len(elements):
                 element_type, char = elements[i]
-                if element_type in ['dit', 'dah'] and (not truncated_text or truncated_text[-1] != char):
+                is_mark = element_type in ["dit", "dah"]
+                is_new_char = not truncated_text or truncated_text[-1] != char
+                if is_mark and is_new_char:
                     truncated_text.append(char)
 
         timing_sequence = truncated_sequence
-        text = ''.join(truncated_text)
+        text = "".join(truncated_text)
         total_duration = current_duration
 
     # 4. Sample envelope parameters
@@ -91,7 +101,7 @@ def generate_training_sample(phase: int = 3, sample_rate: int = 16000,
         fall_time=fall_time,
         envelope_type=envelope_type,
         frequency_drift=frequency_drift,
-        chirp_amount=chirp_amount
+        chirp_amount=chirp_amount,
     )
 
     # 7. Select noise level
@@ -137,23 +147,25 @@ def generate_training_sample(phase: int = 3, sample_rate: int = 16000,
 
     # 13. Package metadata
     metadata = {
-        'text': text,
-        'wpm': wpm,
-        'frequency': frequency,
-        'snr_db': snr_db,
-        'timing_variance': timing_variance,
-        'rise_time': rise_time,
-        'envelope_type': envelope_type,
-        'frequency_drift': frequency_drift,
-        'chirp_amount': chirp_amount,
-        'duration': len(audio) / sample_rate,
-        'phase': phase,
+        "text": text,
+        "wpm": wpm,
+        "frequency": frequency,
+        "snr_db": snr_db,
+        "timing_variance": timing_variance,
+        "rise_time": rise_time,
+        "envelope_type": envelope_type,
+        "frequency_drift": frequency_drift,
+        "chirp_amount": chirp_amount,
+        "duration": len(audio) / sample_rate,
+        "phase": phase,
     }
 
     return audio, text, metadata
 
 
-def generate_sample_with_params(params: Dict, sample_rate: int = 16000) -> Tuple[np.ndarray, str, Dict]:
+def generate_sample_with_params(
+    params: dict, sample_rate: int = 16000
+) -> tuple[np.ndarray, str, dict]:
     """
     Generate a sample with specific parameters (for test set generation).
 
@@ -167,16 +179,19 @@ def generate_sample_with_params(params: Dict, sample_rate: int = 16000) -> Tuple
     morse = MorseCode()
 
     # Extract or use defaults
-    wpm = params.get('wpm', 20)
-    frequency = params.get('frequency', 600)
-    snr_db = params.get('snr_db', 15)
-    text = params.get('text', generate_random_text())
-    timing_variance = params.get('timing_variance', {
-        'dit_dah_ratio': 3.0,
-        'element_gap_variance': 0.1,
-        'char_gap_variance': 0.1,
-        'word_gap_variance': 0.1,
-    })
+    wpm = params.get("wpm", 20)
+    frequency = params.get("frequency", 600)
+    snr_db = params.get("snr_db", 15)
+    text = params.get("text", generate_random_text())
+    timing_variance = params.get(
+        "timing_variance",
+        {
+            "dit_dah_ratio": 3.0,
+            "element_gap_variance": 0.1,
+            "char_gap_variance": 0.1,
+            "word_gap_variance": 0.1,
+        },
+    )
 
     # Generate timing
     timing_calc = TimingCalculator(wpm, timing_variance)
@@ -188,28 +203,28 @@ def generate_sample_with_params(params: Dict, sample_rate: int = 16000) -> Tuple
         timing_sequence=timing_sequence,
         frequency=frequency,
         sample_rate=sample_rate,
-        rise_time=params.get('rise_time', 0.003),
-        fall_time=params.get('fall_time', 0.003),
-        envelope_type=params.get('envelope_type', 'linear'),
-        frequency_drift=params.get('frequency_drift', 0.0),
-        chirp_amount=params.get('chirp_amount', 0.0)
+        rise_time=params.get("rise_time", 0.003),
+        fall_time=params.get("fall_time", 0.003),
+        envelope_type=params.get("envelope_type", "linear"),
+        frequency_drift=params.get("frequency_drift", 0.0),
+        chirp_amount=params.get("chirp_amount", 0.0),
     )
 
     # Add noise
     audio = add_noise(audio, snr_db, frequency, sample_rate)
 
     # Optional effects
-    if params.get('add_qrm', False):
+    if params.get("add_qrm", False):
         audio = add_qrm(audio, frequency, sample_rate)
-    if params.get('add_qrn', False):
+    if params.get("add_qrn", False):
         audio = add_impulse_noise(audio, sample_rate)
-    if params.get('add_fading', False):
+    if params.get("add_fading", False):
         audio = apply_fading(audio, sample_rate)
-    if params.get('add_agc', False):
+    if params.get("add_agc", False):
         audio = apply_agc_pumping(audio, sample_rate)
-    if params.get('add_clipping', False):
+    if params.get("add_clipping", False):
         audio = apply_clipping(audio)
-    if params.get('add_filter', False):
+    if params.get("add_filter", False):
         audio = apply_bandpass_filter(audio, frequency, q_factor=20, sample_rate=sample_rate)
 
     # Normalize
@@ -218,11 +233,11 @@ def generate_sample_with_params(params: Dict, sample_rate: int = 16000) -> Tuple
         audio = audio / max_val * 0.9
 
     metadata = {
-        'text': text,
-        'wpm': wpm,
-        'frequency': frequency,
-        'snr_db': snr_db,
-        'duration': len(audio) / sample_rate,
+        "text": text,
+        "wpm": wpm,
+        "frequency": frequency,
+        "snr_db": snr_db,
+        "duration": len(audio) / sample_rate,
     }
 
     return audio, text, metadata

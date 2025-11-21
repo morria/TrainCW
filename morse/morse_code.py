@@ -2,25 +2,53 @@
 Morse code encoding and decoding utilities.
 """
 
-from typing import List, Tuple, Optional
-import numpy as np
-
 # International Morse Code dictionary
 MORSE_CODE_DICT = {
-    'A': '.-',    'B': '-...',  'C': '-.-.',  'D': '-..',   'E': '.',
-    'F': '..-.',  'G': '--.',   'H': '....',  'I': '..',    'J': '.---',
-    'K': '-.-',   'L': '.-..',  'M': '--',    'N': '-.',    'O': '---',
-    'P': '.--.',  'Q': '--.-',  'R': '.-.',   'S': '...',   'T': '-',
-    'U': '..-',   'V': '...-',  'W': '.--',   'X': '-..-',  'Y': '-.--',
-    'Z': '--..',
-    '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
-    '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
-    '.': '.-.-.-', ',': '--..--', '?': '..--..', '/': '-..-.',
+    "A": ".-",
+    "B": "-...",
+    "C": "-.-.",
+    "D": "-..",
+    "E": ".",
+    "F": "..-.",
+    "G": "--.",
+    "H": "....",
+    "I": "..",
+    "J": ".---",
+    "K": "-.-",
+    "L": ".-..",
+    "M": "--",
+    "N": "-.",
+    "O": "---",
+    "P": ".--.",
+    "Q": "--.-",
+    "R": ".-.",
+    "S": "...",
+    "T": "-",
+    "U": "..-",
+    "V": "...-",
+    "W": ".--",
+    "X": "-..-",
+    "Y": "-.--",
+    "Z": "--..",
+    "0": "-----",
+    "1": ".----",
+    "2": "..---",
+    "3": "...--",
+    "4": "....-",
+    "5": ".....",
+    "6": "-....",
+    "7": "--...",
+    "8": "---..",
+    "9": "----.",
+    ".": ".-.-.-",
+    ",": "--..--",
+    "?": "..--..",
+    "/": "-..-.",
     # Prosigns (sent as single character without gap)
-    'AR': '.-.-.',    # End of message (also period)
-    'SK': '...-.-',   # End of contact
-    'BT': '-...-',    # Break/Pause
-    'KN': '-.--.',    # Invitation to named station only
+    "AR": ".-.-.",  # End of message (also period)
+    "SK": "...-.-",  # End of contact
+    "BT": "-...-",  # Break/Pause
+    "KN": "-.--.",  # Invitation to named station only
 }
 
 # Reverse mapping for decoding
@@ -36,7 +64,7 @@ class MorseCode:
         self.code_dict = MORSE_CODE_DICT
         self.reverse_dict = MORSE_TO_CHAR
 
-    def text_to_morse(self, text: str) -> List[str]:
+    def text_to_morse(self, text: str) -> list[str]:
         """
         Convert text to morse code patterns.
 
@@ -53,7 +81,7 @@ class MorseCode:
         while i < len(text):
             # Check for prosigns (2-char sequences)
             if i < len(text) - 1:
-                two_char = text[i:i+2]
+                two_char = text[i : i + 2]
                 if two_char in self.code_dict:
                     morse_patterns.append(self.code_dict[two_char])
                     i += 2
@@ -61,8 +89,8 @@ class MorseCode:
 
             # Single character
             char = text[i]
-            if char == ' ':
-                morse_patterns.append(' ')  # Word space
+            if char == " ":
+                morse_patterns.append(" ")  # Word space
             elif char in self.code_dict:
                 morse_patterns.append(self.code_dict[char])
             else:
@@ -72,7 +100,7 @@ class MorseCode:
 
         return morse_patterns
 
-    def morse_to_text(self, morse_patterns: List[str]) -> str:
+    def morse_to_text(self, morse_patterns: list[str]) -> str:
         """
         Decode morse patterns back to text.
 
@@ -84,16 +112,16 @@ class MorseCode:
         """
         text = []
         for pattern in morse_patterns:
-            if pattern == ' ':
-                text.append(' ')
+            if pattern == " ":
+                text.append(" ")
             elif pattern in self.reverse_dict:
                 text.append(self.reverse_dict[pattern])
             else:
-                text.append('?')  # Unknown pattern
+                text.append("?")  # Unknown pattern
 
-        return ''.join(text)
+        return "".join(text)
 
-    def text_to_elements(self, text: str) -> List[Tuple[str, str]]:
+    def text_to_elements(self, text: str) -> list[tuple[str, str]]:
         """
         Convert text to a sequence of morse elements with labels.
 
@@ -112,28 +140,29 @@ class MorseCode:
         elements = []
 
         for i, pattern in enumerate(morse_patterns):
-            if pattern == ' ':
-                elements.append(('word_gap', ' '))
+            if pattern == " ":
+                elements.append(("word_gap", " "))
             else:
                 # Add elements for this character
                 for j, symbol in enumerate(pattern):
-                    if symbol == '.':
-                        elements.append(('dit', text[i] if i < len(text) else '?'))
-                    elif symbol == '-':
-                        elements.append(('dah', text[i] if i < len(text) else '?'))
+                    if symbol == ".":
+                        elements.append(("dit", text[i] if i < len(text) else "?"))
+                    elif symbol == "-":
+                        elements.append(("dah", text[i] if i < len(text) else "?"))
 
                     # Add element gap (except after last element in character)
                     if j < len(pattern) - 1:
-                        elements.append(('element_gap', text[i] if i < len(text) else '?'))
+                        elements.append(("element_gap", text[i] if i < len(text) else "?"))
 
                 # Add character gap (except after last character)
-                if i < len(morse_patterns) - 1 and morse_patterns[i+1] != ' ':
-                    elements.append(('char_gap', ' '))
+                if i < len(morse_patterns) - 1 and morse_patterns[i + 1] != " ":
+                    elements.append(("char_gap", " "))
 
         return elements
 
-    def get_character_duration(self, char: str, unit_time: float,
-                              timing_variance: Optional[dict] = None) -> float:
+    def get_character_duration(
+        self, char: str, unit_time: float, timing_variance: dict | None = None
+    ) -> float:
         """
         Calculate the duration of a character in seconds.
 
@@ -145,7 +174,7 @@ class MorseCode:
         Returns:
             Duration in seconds
         """
-        if char == ' ':
+        if char == " ":
             return unit_time * 7  # Word gap
 
         if char.upper() not in self.code_dict:
@@ -155,9 +184,9 @@ class MorseCode:
         duration = 0.0
 
         for i, symbol in enumerate(pattern):
-            if symbol == '.':
+            if symbol == ".":
                 duration += unit_time  # Dit = 1 unit
-            elif symbol == '-':
+            elif symbol == "-":
                 duration += unit_time * 3  # Dah = 3 units
 
             # Inter-element gap (except after last element)

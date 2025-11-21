@@ -9,9 +9,11 @@ Usage:
 
 import argparse
 import pickle
-import numpy as np
-from pathlib import Path
 import sys
+from pathlib import Path
+
+import numpy as np
+
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -39,17 +41,17 @@ def generate_validation_set(count: int, sample_rate: int = 16000):
 
     samples_per_condition = count // (len(speeds) * len(snr_levels))
 
-    print(f"Generating validation set: {len(speeds)} speeds × {len(snr_levels)} SNR levels")
+    print(f"Generating validation set: {len(speeds)} speeds x {len(snr_levels)} SNR levels")
     print(f"Samples per condition: {samples_per_condition}")
 
     for wpm in speeds:
         for snr in snr_levels:
             for _ in range(samples_per_condition):
                 params = {
-                    'wpm': wpm + np.random.uniform(-2, 2),
-                    'snr_db': snr + np.random.uniform(-2, 2),
-                    'frequency': np.random.uniform(500, 800),
-                    'text': generate_random_text(),
+                    "wpm": wpm + np.random.uniform(-2, 2),
+                    "snr_db": snr + np.random.uniform(-2, 2),
+                    "frequency": np.random.uniform(500, 800),
+                    "text": generate_random_text(),
                 }
                 audio, text, metadata = generate_sample_with_params(params, sample_rate)
                 samples.append((audio, text, metadata))
@@ -63,7 +65,7 @@ def generate_speed_sweep_test(count: int = 800, sample_rate: int = 16000):
     Generate test set sweeping speed (clean conditions).
 
     Args:
-        count: Number of samples (100 per speed × 8 speeds = 800)
+        count: Number of samples (100 per speed x 8 speeds = 800)
         sample_rate: Audio sample rate
 
     Returns:
@@ -78,16 +80,16 @@ def generate_speed_sweep_test(count: int = 800, sample_rate: int = 16000):
     for wpm in speeds:
         for _ in range(samples_per_speed):
             params = {
-                'wpm': wpm,
-                'snr_db': 25,  # Clean
-                'frequency': 600,  # Standard frequency
-                'text': generate_random_text(),
-                'timing_variance': {
-                    'dit_dah_ratio': 3.0,
-                    'element_gap_variance': 0.05,
-                    'char_gap_variance': 0.05,
-                    'word_gap_variance': 0.05,
-                }
+                "wpm": wpm,
+                "snr_db": 25,  # Clean
+                "frequency": 600,  # Standard frequency
+                "text": generate_random_text(),
+                "timing_variance": {
+                    "dit_dah_ratio": 3.0,
+                    "element_gap_variance": 0.05,
+                    "char_gap_variance": 0.05,
+                    "word_gap_variance": 0.05,
+                },
             }
             audio, text, metadata = generate_sample_with_params(params, sample_rate)
             samples.append((audio, text, metadata))
@@ -116,10 +118,10 @@ def generate_snr_sweep_test(count: int = 800, sample_rate: int = 16000):
     for snr in snr_levels:
         for _ in range(samples_per_snr):
             params = {
-                'wpm': 20,
-                'snr_db': snr,
-                'frequency': 600,
-                'text': generate_random_text(),
+                "wpm": 20,
+                "snr_db": snr,
+                "frequency": 600,
+                "text": generate_random_text(),
             }
             audio, text, metadata = generate_sample_with_params(params, sample_rate)
             samples.append((audio, text, metadata))
@@ -140,7 +142,7 @@ def generate_interference_test(count: int = 900, sample_rate: int = 16000):
         List of samples
     """
     samples = []
-    interference_types = ['clean', 'qrm', 'qrn', 'fading', 'combined']
+    interference_types = ["clean", "qrm", "qrn", "fading", "combined"]
     samples_per_type = count // len(interference_types)
 
     print(f"Generating interference test: {len(interference_types)} types")
@@ -148,13 +150,13 @@ def generate_interference_test(count: int = 900, sample_rate: int = 16000):
     for interference_type in interference_types:
         for _ in range(samples_per_type):
             params = {
-                'wpm': 20,
-                'snr_db': 12,
-                'frequency': 600,
-                'text': generate_random_text(),
-                'add_qrm': interference_type in ['qrm', 'combined'],
-                'add_qrn': interference_type in ['qrn', 'combined'],
-                'add_fading': interference_type in ['fading', 'combined'],
+                "wpm": 20,
+                "snr_db": 12,
+                "frequency": 600,
+                "text": generate_random_text(),
+                "add_qrm": interference_type in ["qrm", "combined"],
+                "add_qrn": interference_type in ["qrn", "combined"],
+                "add_fading": interference_type in ["fading", "combined"],
             }
             audio, text, metadata = generate_sample_with_params(params, sample_rate)
             samples.append((audio, text, metadata))
@@ -164,16 +166,18 @@ def generate_interference_test(count: int = 900, sample_rate: int = 16000):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate CW test/validation sets')
-    parser.add_argument('--type', required=True,
-                       choices=['validation', 'test_speed', 'test_snr', 'test_interference'],
-                       help='Type of test set to generate')
-    parser.add_argument('--count', type=int, required=True,
-                       help='Number of samples to generate')
-    parser.add_argument('--output', required=True,
-                       help='Output file path (.pkl)')
-    parser.add_argument('--sample-rate', type=int, default=16000,
-                       help='Audio sample rate (default: 16000)')
+    parser = argparse.ArgumentParser(description="Generate CW test/validation sets")
+    parser.add_argument(
+        "--type",
+        required=True,
+        choices=["validation", "test_speed", "test_snr", "test_interference"],
+        help="Type of test set to generate",
+    )
+    parser.add_argument("--count", type=int, required=True, help="Number of samples to generate")
+    parser.add_argument("--output", required=True, help="Output file path (.pkl)")
+    parser.add_argument(
+        "--sample-rate", type=int, default=16000, help="Audio sample rate (default: 16000)"
+    )
 
     args = parser.parse_args()
 
@@ -184,27 +188,27 @@ def main():
     # Generate samples
     print(f"Generating {args.type} set with {args.count} samples...")
 
-    if args.type == 'validation':
+    if args.type == "validation":
         samples = generate_validation_set(args.count, args.sample_rate)
-    elif args.type == 'test_speed':
+    elif args.type == "test_speed":
         samples = generate_speed_sweep_test(args.count, args.sample_rate)
-    elif args.type == 'test_snr':
+    elif args.type == "test_snr":
         samples = generate_snr_sweep_test(args.count, args.sample_rate)
-    elif args.type == 'test_interference':
+    elif args.type == "test_interference":
         samples = generate_interference_test(args.count, args.sample_rate)
 
     # Save to file
     print(f"Saving to {args.output}...")
-    with open(args.output, 'wb') as f:
+    with output_path.open("wb") as f:
         pickle.dump(samples, f)
 
     # Report statistics
     total_duration = sum(len(audio) / args.sample_rate for audio, _, _ in samples)
-    print(f"\nDone!")
+    print("\nDone!")
     print(f"  Samples: {len(samples)}")
-    print(f"  Total duration: {total_duration:.1f} seconds ({total_duration/60:.1f} minutes)")
+    print(f"  Total duration: {total_duration:.1f} seconds ({total_duration / 60:.1f} minutes)")
     print(f"  File size: {output_path.stat().st_size / 1024 / 1024:.1f} MB")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

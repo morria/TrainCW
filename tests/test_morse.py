@@ -2,9 +2,8 @@
 Tests for Morse code utilities.
 """
 
-import pytest
-from morse.morse_code import MorseCode, MORSE_CODE_DICT
-from morse.timing import TimingCalculator, WPM_TO_UNIT_TIME
+from morse.morse_code import MorseCode
+from morse.timing import WPM_TO_UNIT_TIME, TimingCalculator
 
 
 def test_morse_encoding():
@@ -12,17 +11,17 @@ def test_morse_encoding():
     morse = MorseCode()
 
     # Test single letter
-    assert morse.text_to_morse('A') == ['.-']
-    assert morse.text_to_morse('E') == ['.']
-    assert morse.text_to_morse('T') == ['-']
+    assert morse.text_to_morse("A") == [".-"]
+    assert morse.text_to_morse("E") == ["."]
+    assert morse.text_to_morse("T") == ["-"]
 
     # Test word
-    result = morse.text_to_morse('SOS')
-    assert result == ['...', '---', '...']
+    result = morse.text_to_morse("SOS")
+    assert result == ["...", "---", "..."]
 
     # Test with space
-    result = morse.text_to_morse('HI OK')
-    assert result == ['....', '..', ' ', '---', '-.-']
+    result = morse.text_to_morse("HI OK")
+    assert result == ["....", "..", " ", "---", "-.-"]
 
 
 def test_morse_decoding():
@@ -30,23 +29,23 @@ def test_morse_decoding():
     morse = MorseCode()
 
     # Test basic decoding
-    assert morse.morse_to_text(['.-']) == 'A'
-    assert morse.morse_to_text(['...', '---', '...']) == 'SOS'
+    assert morse.morse_to_text([".-"]) == "A"
+    assert morse.morse_to_text(["...", "---", "..."]) == "SOS"
 
     # Test with space
-    assert morse.morse_to_text(['....', '..', ' ', '---', '-.-']) == 'HI OK'
+    assert morse.morse_to_text(["....", "..", " ", "---", "-.-"]) == "HI OK"
 
 
 def test_text_to_elements():
     """Test conversion to element sequence."""
     morse = MorseCode()
 
-    elements = morse.text_to_elements('A')
+    elements = morse.text_to_elements("A")
     # 'A' = '.-' = dit, element_gap, dah
     assert len(elements) == 3
-    assert elements[0][0] == 'dit'
-    assert elements[1][0] == 'element_gap'
-    assert elements[2][0] == 'dah'
+    assert elements[0][0] == "dit"
+    assert elements[1][0] == "element_gap"
+    assert elements[2][0] == "dah"
 
 
 def test_wpm_to_unit_time():
@@ -78,19 +77,19 @@ def test_timing_sequence():
     morse = MorseCode()
     timing = TimingCalculator(wpm=20)
 
-    elements = morse.text_to_elements('E')  # 'E' = '.'
+    elements = morse.text_to_elements("E")  # 'E' = '.'
     sequence = timing.get_timing_sequence(elements)
 
     # Should have one dit
     assert len(sequence) == 1
-    assert sequence[0][1] == True  # Tone on
+    assert sequence[0][1]  # Tone on
 
     # Test 'A' = '.-'
-    elements = morse.text_to_elements('A')
+    elements = morse.text_to_elements("A")
     sequence = timing.get_timing_sequence(elements)
 
     # Should have: dit, gap, dah
     assert len(sequence) == 3
-    assert sequence[0][1] == True   # Dit on
-    assert sequence[1][1] == False  # Gap off
-    assert sequence[2][1] == True   # Dah on
+    assert sequence[0][1]  # Dit on
+    assert not sequence[1][1]  # Gap off
+    assert sequence[2][1]  # Dah on

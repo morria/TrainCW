@@ -3,14 +3,15 @@ Interference generation: QRM (other CW signals) and propagation effects.
 """
 
 import numpy as np
-from typing import List, Tuple
 from morse.morse_code import MorseCode
 from morse.timing import TimingCalculator, sample_wpm, select_operator_style
-from .audio_synthesis import generate_cw_audio, sample_frequency, sample_envelope_type
+
+from .audio_synthesis import generate_cw_audio, sample_envelope_type
 
 
-def generate_qrm_signal(main_frequency: float, duration: float,
-                       sample_rate: int = 16000) -> Tuple[np.ndarray, dict]:
+def generate_qrm_signal(
+    main_frequency: float, duration: float, sample_rate: int = 16000
+) -> tuple[np.ndarray, dict]:
     """
     Generate a QRM signal (interfering CW station).
 
@@ -25,10 +26,12 @@ def generate_qrm_signal(main_frequency: float, duration: float,
     morse = MorseCode()
 
     # Random frequency offset from main signal
-    offset = np.random.choice([
-        np.random.uniform(-800, -100),  # Below main signal
-        np.random.uniform(100, 800)      # Above main signal
-    ])
+    offset = np.random.choice(
+        [
+            np.random.uniform(-800, -100),  # Below main signal
+            np.random.uniform(100, 800),  # Above main signal
+        ]
+    )
     qrm_frequency = main_frequency + offset
 
     # Ensure frequency is in valid range
@@ -41,7 +44,8 @@ def generate_qrm_signal(main_frequency: float, duration: float,
     timing_variance = select_operator_style()
 
     # Generate random text (callsigns and random characters)
-    from .text_generator import generate_random_text, generate_callsign
+    from .text_generator import generate_callsign, generate_random_text
+
     if np.random.random() < 0.5:
         text = generate_callsign()
     else:
@@ -57,7 +61,7 @@ def generate_qrm_signal(main_frequency: float, duration: float,
         timing_sequence=timing_sequence,
         frequency=qrm_frequency,
         sample_rate=sample_rate,
-        envelope_type=sample_envelope_type()
+        envelope_type=sample_envelope_type(),
     )
 
     # Pad or trim to match duration
@@ -70,16 +74,15 @@ def generate_qrm_signal(main_frequency: float, duration: float,
         qrm_audio = qrm_audio[:target_samples]
 
     metadata = {
-        'frequency': qrm_frequency,
-        'wpm': qrm_wpm,
-        'text': text,
+        "frequency": qrm_frequency,
+        "wpm": qrm_wpm,
+        "text": text,
     }
 
     return qrm_audio, metadata
 
 
-def add_qrm(audio: np.ndarray, main_frequency: float,
-           sample_rate: int = 16000) -> np.ndarray:
+def add_qrm(audio: np.ndarray, main_frequency: float, sample_rate: int = 16000) -> np.ndarray:
     """
     Add QRM (interfering CW signals) to audio.
 
@@ -121,8 +124,9 @@ def add_qrm(audio: np.ndarray, main_frequency: float,
     return audio
 
 
-def generate_fading_envelope(duration: float, sample_rate: int,
-                            fading_type: str = 'slow') -> np.ndarray:
+def generate_fading_envelope(
+    duration: float, sample_rate: int, fading_type: str = "slow"
+) -> np.ndarray:
     """
     Generate fading envelope (QSB - ionospheric propagation).
 
@@ -137,7 +141,7 @@ def generate_fading_envelope(duration: float, sample_rate: int,
     n_samples = int(duration * sample_rate)
     t = np.arange(n_samples) / sample_rate
 
-    if fading_type == 'slow':
+    if fading_type == "slow":
         # Slow fading: 0.1-1 Hz modulation, 6-20 dB depth
         fading_rate = np.random.uniform(0.1, 1.0)  # Hz
         fade_depth_db = np.random.uniform(6, 20)
@@ -176,7 +180,7 @@ def apply_fading(audio: np.ndarray, sample_rate: int = 16000) -> np.ndarray:
     duration = len(audio) / sample_rate
 
     # Select fading type (80% slow, 20% fast)
-    fading_type = 'slow' if np.random.random() < 0.80 else 'fast'
+    fading_type = "slow" if np.random.random() < 0.80 else "fast"
 
     # Generate fading envelope
     envelope = generate_fading_envelope(duration, sample_rate, fading_type)
@@ -184,8 +188,12 @@ def apply_fading(audio: np.ndarray, sample_rate: int = 16000) -> np.ndarray:
     return audio * envelope
 
 
-def apply_agc_pumping(audio: np.ndarray, sample_rate: int = 16000,
-                     attack_time: float = 0.030, release_time: float = 0.300) -> np.ndarray:
+def apply_agc_pumping(
+    audio: np.ndarray,
+    sample_rate: int = 16000,
+    attack_time: float = 0.030,
+    release_time: float = 0.300,
+) -> np.ndarray:
     """
     Simulate AGC (Automatic Gain Control) pumping.
 
@@ -216,20 +224,20 @@ def apply_agc_pumping(audio: np.ndarray, sample_rate: int = 16000,
     smoothed_envelope[0] = envelope[0]
 
     for i in range(1, len(envelope)):
-        if envelope[i] > smoothed_envelope[i-1]:
+        if envelope[i] > smoothed_envelope[i - 1]:
             # Attack
-            smoothed_envelope[i] = attack_coeff * smoothed_envelope[i-1] + \
-                                 (1 - attack_coeff) * envelope[i]
+            smoothed_envelope[i] = (
+                attack_coeff * smoothed_envelope[i - 1] + (1 - attack_coeff) * envelope[i]
+            )
         else:
             # Release
-            smoothed_envelope[i] = release_coeff * smoothed_envelope[i-1] + \
-                                 (1 - release_coeff) * envelope[i]
+            smoothed_envelope[i] = (
+                release_coeff * smoothed_envelope[i - 1] + (1 - release_coeff) * envelope[i]
+            )
 
     # Apply gain reduction (inverse of envelope)
     target_level = 0.5
-    gain = np.where(smoothed_envelope > 0.01,
-                   target_level / (smoothed_envelope + 0.01),
-                   1.0)
+    gain = np.where(smoothed_envelope > 0.01, target_level / (smoothed_envelope + 0.01), 1.0)
 
     # Limit gain to reasonable range
     gain = np.clip(gain, 0.3, 3.0)
@@ -263,8 +271,9 @@ def apply_clipping(audio: np.ndarray, clip_percentage: float = 0.10) -> np.ndarr
     return clipped
 
 
-def apply_bandpass_filter(audio: np.ndarray, center_freq: float,
-                         q_factor: float, sample_rate: int = 16000) -> np.ndarray:
+def apply_bandpass_filter(
+    audio: np.ndarray, center_freq: float, q_factor: float, sample_rate: int = 16000
+) -> np.ndarray:
     """
     Apply narrow bandpass filter (simulates CW filter with ringing).
 
@@ -292,8 +301,7 @@ def apply_bandpass_filter(audio: np.ndarray, center_freq: float,
     high_freq = min(sample_rate / 2 - 1, center_freq + bandwidth / 2)
 
     # Higher order filter for more ringing
-    sos = scipy.signal.butter(6, [low_freq, high_freq], btype='band',
-                            fs=sample_rate, output='sos')
+    sos = scipy.signal.butter(6, [low_freq, high_freq], btype="band", fs=sample_rate, output="sos")
 
     filtered = scipy.signal.sosfilt(sos, audio)
 
