@@ -106,12 +106,14 @@ def test_generate_sample_with_params():
 def test_phase_progression():
     """Test that different phases produce different difficulty."""
     # Phase 1 should be easier (higher SNR)
-    samples_phase1 = [generate_training_sample(phase=1) for _ in range(10)]
+    # Use 50 samples to ensure statistical significance
+    samples_phase1 = [generate_training_sample(phase=1) for _ in range(50)]
     snr_phase1 = [m["snr_db"] for _, _, m in samples_phase1]
 
     # Phase 3 should include harder conditions
-    samples_phase3 = [generate_training_sample(phase=3) for _ in range(10)]
+    samples_phase3 = [generate_training_sample(phase=3) for _ in range(50)]
     snr_phase3 = [m["snr_db"] for _, _, m in samples_phase3]
 
-    # Phase 1 should have higher average SNR
+    # Phase 1 should have higher average SNR (20 dB vs ~14 dB expected)
+    # With 50 samples, this should be reliable
     assert np.mean(snr_phase1) > np.mean(snr_phase3)
