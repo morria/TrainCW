@@ -76,6 +76,9 @@ Issues = "https://github.com/morria/TrainCW/issues"
 [project.scripts]
 traincw = "traincw.cli:main"
 
+[tool.setuptools]
+license-files = []  # Disable automatic license file inclusion to fix twine check
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["traincw*"]
@@ -145,6 +148,8 @@ ignore = [
     "E501",   # Line too long (handled by formatter)
     "B008",   # Do not perform function call in argument defaults
     "B905",   # zip() without an explicit strict= parameter
+    "NPY002", # Allow legacy numpy.random API (intentional for simplicity)
+    "N802",   # Allow uppercase function names (WPM_TO_UNIT_TIME)
 ]
 
 # Allow autofix for all enabled rules
