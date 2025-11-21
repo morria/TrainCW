@@ -1,180 +1,100 @@
-# Base Configuration for TrainCW
-# This is a sample configuration file for training Morse code neural networks
+# Base configuration for CW decoder training
 
-# Model Architecture
-model:
-  name: "cnn_lstm_ctc"
-
-  # CNN Encoder
-  encoder:
-    num_conv_layers: 3
-    conv_channels: [32, 64, 128]
-    kernel_sizes: [[3, 3], [3, 3], [3, 3]]
-    pool_sizes: [[2, 2], [2, 2], [2, 2]]
-    dropout: 0.2
-
-  # LSTM Layers
-  lstm:
-    hidden_size: 256
-    num_layers: 2
-    bidirectional: true
-    dropout: 0.3
-
-  # Output Layer
-  output:
-    num_characters: 40  # A-Z, 0-9, space, special chars
-
-# Audio Processing
+# Audio preprocessing
 audio:
-  sample_rate: 16000  # Hz
-  window_length: 0.025  # 25ms
-  hop_length: 0.010  # 10ms
+  sample_rate: 16000
   n_fft: 512
+  hop_length: 160  # 10ms at 16kHz
+  win_length: 400  # 25ms at 16kHz
   n_mels: 64
-  fmin: 0
-  fmax: 8000
+  f_min: 0.0
+  f_max: 8000.0
 
-# Data Generation
-data:
-  # Training data
-  train:
-    samples_per_epoch: 10000
-    batch_size: 32
-    num_workers: 4
-    pin_memory: true
+# Model architecture
+model:
+  # CNN encoder
+  cnn_channels: [32, 64, 128, 256]
+  cnn_kernel_sizes: [3, 3, 3, 3]
+  cnn_strides: [1, 1, 1, 1]
+  cnn_pooling: [2, 2, 2, 2]
 
-  # Validation data
-  val:
-    samples: 1000
-    batch_size: 64
+  # LSTM
+  lstm_hidden_size: 256
+  lstm_num_layers: 2
+  lstm_dropout: 0.1
+  bidirectional: true
 
-  # Text generation
-  text:
-    min_length: 5
-    max_length: 50
-    distributions:
-      random_chars: 0.40
-      words: 0.30
-      callsigns: 0.20
-      abbreviations: 0.10
+  # Output
+  num_classes: 45  # 44 characters + blank for CTC
 
-  # Morse code parameters
-  morse:
-    wpm_range: [5, 40]
-    wpm_distribution: "beta"  # Favor 15-25 WPM
-    frequency_range: [400, 900]  # Hz
-    dit_dah_ratio_range: [2.5, 3.5]  # Ideal is 3.0
-    timing_variance: 0.20  # ±20%
-
-  # Audio synthesis
-  synthesis:
-    envelope:
-      rise_time_range: [0.001, 0.010]  # 1-10ms
-      fall_time_range: [0.001, 0.010]
-    frequency_drift: 0.05  # Max ±5% drift
-    chirp_probability: 0.1
-
-  # Noise and interference
-  noise:
-    snr_range: [-5, 25]  # dB
-    types:
-      white_noise: 0.4
-      pink_noise: 0.3
-      qrm: 0.2  # Other CW signals
-      qrn: 0.1  # Atmospheric noise
-
-    qrm:  # Interference from other CW
-      probability: 0.3
-      frequency_offset_range: [100, 500]  # Hz
-      strength_range: [0.2, 0.8]
-
-    qrn:  # Atmospheric noise
-      probability: 0.2
-      impulse_rate: 0.1  # Impulses per second
-
-    fading:
-      probability: 0.2
-      rate_range: [0.1, 1.0]  # Hz
-      depth_range: [0.2, 0.6]
-
-# Training
+# Training configuration
 training:
-  epochs: 100
-  optimizer:
-    name: "adam"
-    learning_rate: 0.001
-    weight_decay: 0.00001
+  # General
+  batch_size: 32
+  num_epochs: 100
+  samples_per_epoch: 10000
 
-  scheduler:
-    name: "reduce_on_plateau"
-    patience: 5
-    factor: 0.5
-    min_lr: 0.00001
+  # Optimizer
+  optimizer: adamw
+  learning_rate: 0.001
+  weight_decay: 0.00001
+  betas: [0.9, 0.999]
 
-  loss:
-    name: "ctc"
-    blank_idx: 0
-    reduction: "mean"
+  # Learning rate schedule
+  lr_schedule: cosine  # cosine, plateau, or none
+  lr_warmup_epochs: 5
+  lr_min: 0.000001
 
-  # Curriculum learning
-  curriculum:
-    enabled: true
-    phases:
-      - name: "easy"
-        epochs: 20
-        snr_min: 15
-        wpm_range: [15, 25]
-        timing_variance: 0.10
-
-      - name: "medium"
-        epochs: 30
-        snr_min: 5
-        wpm_range: [10, 35]
-        timing_variance: 0.20
-
-      - name: "hard"
-        epochs: 50
-        snr_min: -5
-        wpm_range: [5, 40]
-        timing_variance: 0.30
+  # Gradient clipping
+  grad_clip_norm: 1.0
 
   # Early stopping
-  early_stopping:
-    enabled: true
-    patience: 10
-    min_delta: 0.001
+  early_stopping_patience: 15
+  early_stopping_min_epochs: 50
 
   # Checkpointing
-  checkpoints:
-    save_dir: "checkpoints"
-    save_best: true
-    save_last: true
-    save_frequency: 5  # Save every N epochs
+  save_every_n_epochs: 5
+  keep_best_n: 3
 
-# Evaluation
-evaluation:
-  metrics:
-    - "cer"  # Character Error Rate
-    - "wer"  # Word Error Rate
+  # Validation
+  val_every_n_epochs: 1
 
-  # Test on different conditions
-  test_conditions:
-    by_speed: [5, 10, 15, 20, 25, 30, 35, 40]  # WPM
-    by_snr: [-5, 0, 5, 10, 15, 20, 25]  # dB
-    by_noise_type: ["clean", "white", "qrm", "qrn", "fading"]
+  # Device
+  device: cpu  # cpu or cuda
+  num_workers: 4
 
-# Logging
-logging:
-  level: "INFO"
-  tensorboard: true
-  log_dir: "logs"
-  log_interval: 10  # Log every N batches
+# Curriculum learning
+curriculum:
+  # Phase 1: Foundation (easy samples)
+  phase1_epochs: 30
+  phase1_wpm_range: [12.0, 25.0]
+  phase1_snr_range: [15.0, 25.0]
+  phase1_timing_variance: 0.15
 
-# Export
+  # Phase 2: Expansion (medium difficulty)
+  phase2_epochs: 30
+  phase2_wpm_range: [8.0, 35.0]
+  phase2_snr_range: [10.0, 25.0]
+  phase2_timing_variance: 0.25
+
+  # Phase 3: Mastery (full difficulty) starts automatically after phase 2
+
+# Data configuration
+data:
+  validation_path: null  # Path to validation data (when implemented)
+  test_paths: []  # List of test data paths (when implemented)
+  max_audio_length: 2.0  # Maximum audio length in seconds (iOS constraint)
+
+# Export configuration
 export:
-  formats: ["onnx", "coreml"]
-  quantization: "float16"  # For iOS optimization
-  target_device: "ios"
+  onnx_opset_version: 14
+  coreml_quantize: float16  # float32, float16, or int8
+  coreml_compute_units: ALL  # ALL, CPU_ONLY, or CPU_AND_GPU
 
-# Random seed for reproducibility
+# Paths
+output_dir: checkpoints
+log_dir: logs
+
+# Experiment
+experiment_name: null  # Will be auto-generated if not specified
 seed: 42
