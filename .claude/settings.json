@@ -1,0 +1,38 @@
+{
+  "projectInfo": {
+    "name": "TrainCW",
+    "description": "Neural network training system for real-time Morse code (CW) decoding",
+    "techStack": [
+      "Python 3.10+",
+      "PyTorch",
+      "Audio Processing (librosa, scipy)",
+      "Machine Learning",
+      "Core ML Export"
+    ]
+  },
+  "preferences": {
+    "pythonVersion": "3.10",
+    "testFramework": "pytest",
+    "linter": "ruff",
+    "formatter": "ruff",
+    "typeChecker": "mypy"
+  },
+  "customInstructions": [
+    "Always follow PEP 8 style guidelines",
+    "Use type hints for all function signatures",
+    "Write comprehensive docstrings in Google style",
+    "Prefer pathlib over os.path for file operations",
+    "Use dataclasses for configuration objects",
+    "Keep functions focused and single-purpose",
+    "Write tests for all new functionality",
+    "Use descriptive variable names (e.g., 'wpm' for words-per-minute)",
+    "Document complex algorithms with inline comments",
+    "Follow the project structure defined in DESIGN.md"
+  ],
+  "codeStyle": {
+    "maxLineLength": 100,
+    "quoteStyle": "double",
+    "indentStyle": "spaces",
+    "indentSize": 4
+  }
+}
