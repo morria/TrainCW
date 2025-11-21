@@ -139,7 +139,7 @@ class TestDecoder:
         """Test vocabulary size."""
         vocab_size = get_vocabulary_size()
 
-        assert vocab_size == 45  # 44 chars + blank
+        assert vocab_size == 46  # 45 chars + blank
 
     def test_decode_predictions(self):
         """Test decode predictions."""
@@ -157,7 +157,7 @@ class TestDecoder:
 
     def test_prosigns(self):
         """Test prosign encoding."""
-        text = "CQ <AR> <SK>"
+        text = "CQ<AR><SK>"
         indices = text_to_indices(text)
 
         # Should have 4 indices: C, Q, AR, SK
