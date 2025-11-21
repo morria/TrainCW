@@ -1,7 +1,6 @@
 """Curriculum learning scheduler for progressive difficulty increase."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -11,9 +10,9 @@ class CurriculumPhase:
     name: str
     start_epoch: int
     end_epoch: int
-    wpm_range: Optional[tuple[float, float]] = None
-    snr_range: Optional[tuple[float, float]] = None
-    timing_variance: Optional[float] = None
+    wpm_range: tuple[float, float] | None = None
+    snr_range: tuple[float, float] | None = None
+    timing_variance: float | None = None
     allow_qrm: bool = True
     allow_qrn: bool = True
     allow_fading: bool = True
@@ -160,7 +159,6 @@ class CurriculumScheduler:
         lines = ["CurriculumScheduler:"]
         for i, phase in enumerate(self.phases, start=1):
             lines.append(
-                f"  Phase {i}: {phase.name} "
-                f"(epochs {phase.start_epoch}-{phase.end_epoch})"
+                f"  Phase {i}: {phase.name} (epochs {phase.start_epoch}-{phase.end_epoch})"
             )
         return "\n".join(lines)

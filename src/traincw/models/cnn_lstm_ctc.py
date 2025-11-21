@@ -3,7 +3,7 @@
 import torch
 import torch.nn as nn
 
-from traincw.models.decoder import BLANK_IDX, decode_predictions, get_vocabulary_size
+from traincw.models.decoder import BLANK_IDX, decode_predictions
 from traincw.models.encoder import CNNEncoder
 
 
@@ -41,10 +41,10 @@ class CWDecoder(nn.Module):
     def __init__(
         self,
         n_mels: int = 64,
-        cnn_channels: list[int] = [32, 64, 128, 256],
-        cnn_kernel_sizes: list[int] = [3, 3, 3, 3],
-        cnn_strides: list[int] = [1, 1, 1, 1],
-        cnn_pooling: list[int] = [2, 2, 2, 2],
+        cnn_channels: list[int] | None = None,
+        cnn_kernel_sizes: list[int] | None = None,
+        cnn_strides: list[int] | None = None,
+        cnn_pooling: list[int] | None = None,
         lstm_hidden_size: int = 256,
         lstm_num_layers: int = 2,
         lstm_dropout: float = 0.1,
@@ -52,6 +52,16 @@ class CWDecoder(nn.Module):
         num_classes: int = 45,
     ):
         super().__init__()
+
+        # Set default values for mutable arguments
+        if cnn_channels is None:
+            cnn_channels = [32, 64, 128, 256]
+        if cnn_kernel_sizes is None:
+            cnn_kernel_sizes = [3, 3, 3, 3]
+        if cnn_strides is None:
+            cnn_strides = [1, 1, 1, 1]
+        if cnn_pooling is None:
+            cnn_pooling = [2, 2, 2, 2]
 
         self.n_mels = n_mels
         self.lstm_hidden_size = lstm_hidden_size

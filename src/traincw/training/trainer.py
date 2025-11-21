@@ -3,7 +3,7 @@
 import logging
 import time
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -44,7 +44,7 @@ class Trainer:
         config,
         train_loader=None,
         val_loader=None,
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger | None = None,
     ):
         self.model = model
         self.config = config
@@ -77,7 +77,7 @@ class Trainer:
         self.best_checkpoints: list[tuple[float, Path]] = []
 
         # TensorBoard
-        self.writer: Optional[SummaryWriter] = None
+        self.writer: SummaryWriter | None = None
         if config.log_dir:
             log_dir = Path(config.log_dir)
             log_dir.mkdir(parents=True, exist_ok=True)
@@ -194,7 +194,6 @@ class Trainer:
         # Move batch to device
         spectrograms = batch["spectrograms"].to(self.device)
         targets = batch["targets"].to(self.device)
-        input_lengths = batch["input_lengths"].to(self.device)
         target_lengths = batch["target_lengths"].to(self.device)
 
         # Forward pass
@@ -249,7 +248,6 @@ class Trainer:
             # Move to device
             spectrograms = batch["spectrograms"].to(self.device)
             targets = batch["targets"].to(self.device)
-            input_lengths = batch["input_lengths"].to(self.device)
             target_lengths = batch["target_lengths"].to(self.device)
             references = batch["texts"]  # Original text strings
 
@@ -274,7 +272,7 @@ class Trainer:
         cer = calculate_cer(all_predictions, all_references)
 
         # Log metrics
-        self.logger.info(f"Validation - Loss: {avg_loss:.4f}, CER: {cer:.4f} ({cer*100:.2f}%)")
+        self.logger.info(f"Validation - Loss: {avg_loss:.4f}, CER: {cer:.4f} ({cer * 100:.2f}%)")
 
         if self.writer is not None:
             self.writer.add_scalar("val/loss", avg_loss, epoch)
@@ -356,7 +354,7 @@ class Trainer:
             self.logger.info(f"Epoch time: {epoch_time:.2f}s")
 
         total_time = time.time() - start_time
-        self.logger.info(f"Training completed in {total_time/3600:.2f} hours")
+        self.logger.info(f"Training completed in {total_time / 3600:.2f} hours")
         self.logger.info(f"Best validation CER: {self.best_val_cer:.4f}")
 
         if self.writer is not None:

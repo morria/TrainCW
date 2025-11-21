@@ -5,7 +5,6 @@ import torch
 
 from traincw.models.cnn_lstm_ctc import CWDecoder, compute_ctc_loss, create_model_from_config
 from traincw.models.decoder import (
-    BLANK_IDX,
     decode_predictions,
     get_vocabulary_size,
     indices_to_text,

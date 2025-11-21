@@ -10,6 +10,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -22,7 +23,7 @@ from traincw.utils.logger import setup_logger
 def set_seed(seed: int) -> None:
     """Set random seeds for reproducibility."""
     random.seed(seed)
-    np.random.seed(seed)
+    np.random.default_rng(seed)  # Modern numpy random
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
@@ -108,7 +109,8 @@ def main():
             "This is expected because data generation has not been implemented yet.\n"
             "The training loop will run but will not train the model.\n"
             "Implement data generation in traincw.data module to enable training.\n"
-            + "=" * 80 + "\n"
+            + "=" * 80
+            + "\n"
         )
 
     # Create trainer
@@ -138,7 +140,9 @@ def main():
         trainer.save_checkpoint(trainer.current_epoch, is_best=False)
 
     logger.info("\nTraining completed!")
-    logger.info(f"Best validation CER: {trainer.best_val_cer:.4f} ({trainer.best_val_cer*100:.2f}%)")
+    logger.info(
+        f"Best validation CER: {trainer.best_val_cer:.4f} ({trainer.best_val_cer * 100:.2f}%)"
+    )
     logger.info(f"Checkpoints saved to: {config.output_dir}")
 
 

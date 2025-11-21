@@ -3,14 +3,13 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 
 def setup_logger(
     name: str = "traincw",
-    log_file: Optional[str | Path] = None,
+    log_file: str | Path | None = None,
     level: int = logging.INFO,
-    format_string: Optional[str] = None,
+    format_string: str | None = None,
 ) -> logging.Logger:
     """
     Set up a logger with console and optional file output.

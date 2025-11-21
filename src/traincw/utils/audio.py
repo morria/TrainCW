@@ -6,12 +6,9 @@ This module provides functions for:
 - Feature extraction for the neural network
 """
 
-from typing import Optional
-
-import librosa
 import numpy as np
 import torch
-import torchaudio.transforms as T
+import torchaudio.transforms as transforms
 
 
 def compute_mel_spectrogram(
@@ -22,7 +19,7 @@ def compute_mel_spectrogram(
     win_length: int = 400,
     n_mels: int = 64,
     f_min: float = 0.0,
-    f_max: Optional[float] = 8000.0,
+    f_max: float | None = 8000.0,
     normalize: bool = True,
 ) -> torch.Tensor:
     """
@@ -63,7 +60,7 @@ def compute_mel_spectrogram(
         waveform = waveform.squeeze()
 
     # Create mel spectrogram transform
-    mel_transform = T.MelSpectrogram(
+    mel_transform = transforms.MelSpectrogram(
         sample_rate=sample_rate,
         n_fft=n_fft,
         hop_length=hop_length,
@@ -79,17 +76,14 @@ def compute_mel_spectrogram(
     mel_spec = mel_transform(waveform)
 
     # Convert to log scale (dB)
-    mel_spec_db = T.AmplitudeToDB(stype="power", top_db=80)(mel_spec)
+    mel_spec_db = transforms.AmplitudeToDB(stype="power", top_db=80)(mel_spec)
 
     # Normalize if requested
     if normalize:
         # Per-sample normalization: mean 0, std 1
         mean = mel_spec_db.mean()
         std = mel_spec_db.std()
-        if std > 1e-6:  # Avoid division by zero
-            mel_spec_db = (mel_spec_db - mean) / std
-        else:
-            mel_spec_db = mel_spec_db - mean
+        mel_spec_db = (mel_spec_db - mean) / std if std > 1e-6 else mel_spec_db - mean
 
     return mel_spec_db
 
@@ -118,10 +112,7 @@ def normalize_audio(
     is_numpy = isinstance(audio, np.ndarray)
 
     # Convert to numpy for processing
-    if not is_numpy:
-        audio_np = audio.cpu().numpy() if audio.is_cuda else audio.numpy()
-    else:
-        audio_np = audio
+    audio_np = (audio.cpu().numpy() if audio.is_cuda else audio.numpy()) if not is_numpy else audio
 
     # Calculate current RMS
     rms = np.sqrt(np.mean(audio_np**2) + eps)

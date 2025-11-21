@@ -5,6 +5,7 @@ from pathlib import Path
 
 import torch
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -30,10 +31,10 @@ def export_to_coreml(
     """
     try:
         import coremltools as ct
-    except ImportError:
+    except ImportError as err:
         raise ImportError(
             "coremltools not installed. Install with: pip install coremltools"
-        )
+        ) from err
 
     onnx_path = Path(onnx_path)
     output_path = Path(output_path)
@@ -58,14 +59,10 @@ def export_to_coreml(
         # Apply quantization
         if quantize == "float16":
             logger.info("Applying float16 quantization...")
-            model = ct.models.neural_network.quantization_utils.quantize_weights(
-                model, nbits=16
-            )
+            model = ct.models.neural_network.quantization_utils.quantize_weights(model, nbits=16)
         elif quantize == "int8":
             logger.info("Applying int8 quantization...")
-            model = ct.models.neural_network.quantization_utils.quantize_weights(
-                model, nbits=8
-            )
+            model = ct.models.neural_network.quantization_utils.quantize_weights(model, nbits=8)
         elif quantize != "float32":
             logger.warning(f"Unknown quantization mode: {quantize}. Using float32.")
 
@@ -84,9 +81,9 @@ def export_to_coreml(
         model.author = "TrainCW"
         model.license = "MIT"
 
-        model.input_description["spectrogram"] = "Mel-spectrogram input (n_mels × time)"
+        model.input_description["spectrogram"] = "Mel-spectrogram input (n_mels x time)"
         model.output_description["logits"] = (
-            "Character logits (time × num_classes) for CTC decoding"
+            "Character logits (time x num_classes) for CTC decoding"
         )
 
         # Save Core ML model

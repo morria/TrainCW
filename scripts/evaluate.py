@@ -7,6 +7,7 @@ from pathlib import Path
 
 import torch
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
@@ -18,9 +19,6 @@ from traincw.utils.logger import setup_logger
 def load_model(checkpoint_path: str, device: str = "cpu") -> CWDecoder:
     """Load model from checkpoint."""
     checkpoint = torch.load(checkpoint_path, map_location=device)
-
-    # Extract model config from checkpoint
-    config_dict = checkpoint.get("config", {})
 
     # Create model (with default parameters if config not in checkpoint)
     model = CWDecoder()
@@ -141,14 +139,14 @@ def main():
     logger.info("\n" + "=" * 80)
     logger.info("Evaluation Results")
     logger.info("=" * 80)
-    logger.info(f"Character Error Rate (CER): {metrics['cer']:.4f} ({metrics['cer']*100:.2f}%)")
-    logger.info(f"Word Error Rate (WER): {metrics['wer']:.4f} ({metrics['wer']*100:.2f}%)")
+    logger.info(f"Character Error Rate (CER): {metrics['cer']:.4f} ({metrics['cer'] * 100:.2f}%)")
+    logger.info(f"Word Error Rate (WER): {metrics['wer']:.4f} ({metrics['wer'] * 100:.2f}%)")
     logger.info("")
 
     # Print sample predictions
     logger.info("Sample predictions:")
     for i in range(min(10, len(predictions))):
-        logger.info(f"\nSample {i+1}:")
+        logger.info(f"\nSample {i + 1}:")
         logger.info(f"  Reference:  {references[i]}")
         logger.info(f"  Prediction: {predictions[i]}")
 
@@ -166,7 +164,7 @@ def main():
             "num_samples": len(predictions),
         }
 
-        with open(output_path, "w") as f:
+        with Path.open(output_path, "w") as f:
             json.dump(results, f, indent=2)
 
         logger.info(f"\nResults saved to {output_path}")

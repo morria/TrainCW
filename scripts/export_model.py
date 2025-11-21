@@ -7,10 +7,11 @@ from pathlib import Path
 
 import torch
 
+
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from traincw.export.to_coreml import export_to_coreml, export_pytorch_to_coreml
+from traincw.export.to_coreml import export_pytorch_to_coreml, export_to_coreml
 from traincw.export.to_onnx import export_to_onnx
 from traincw.models.cnn_lstm_ctc import CWDecoder
 from traincw.utils.logger import setup_logger

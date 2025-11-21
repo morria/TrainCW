@@ -7,11 +7,50 @@ import torch
 # Includes: A-Z, 0-9, punctuation, prosigns
 CHAR_VOCABULARY = [
     " ",  # Space (word separator)
-    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
-    "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z",
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-    ".", ",", "?", "/",
-    "<AR>", "<SK>", "<BT>", "<KN>",  # Prosigns
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J",
+    "K",
+    "L",
+    "M",
+    "N",
+    "O",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "U",
+    "V",
+    "W",
+    "X",
+    "Y",
+    "Z",
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    ".",
+    ",",
+    "?",
+    "/",
+    "<AR>",
+    "<SK>",
+    "<BT>",
+    "<KN>",  # Prosigns
 ]
 
 # Create mapping dictionaries
@@ -176,12 +215,8 @@ def ctc_beam_search_decode(
                         new_prefix = prefix
                     else:
                         # Non-blank: add character (avoid consecutive duplicates)
-                        if len(prefix) > 0 and prefix[-1] == c:
-                            # Same character: blank must separate them in CTC
-                            # For simplicity, we merge them here
-                            new_prefix = prefix
-                        else:
-                            new_prefix = prefix + (c,)
+                        # Same character: blank must separate them in CTC
+                        new_prefix = prefix if len(prefix) > 0 and prefix[-1] == c else (*prefix, c)
 
                     # Update beam probability
                     new_prob = prefix_prob + char_prob

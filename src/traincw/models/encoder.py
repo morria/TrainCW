@@ -31,12 +31,22 @@ class CNNEncoder(nn.Module):
     def __init__(
         self,
         input_channels: int = 1,
-        cnn_channels: list[int] = [32, 64, 128, 256],
-        kernel_sizes: list[int] = [3, 3, 3, 3],
-        strides: list[int] = [1, 1, 1, 1],
-        pooling: list[int] = [2, 2, 2, 2],
+        cnn_channels: list[int] | None = None,
+        kernel_sizes: list[int] | None = None,
+        strides: list[int] | None = None,
+        pooling: list[int] | None = None,
     ):
         super().__init__()
+
+        # Set default values for mutable arguments
+        if cnn_channels is None:
+            cnn_channels = [32, 64, 128, 256]
+        if kernel_sizes is None:
+            kernel_sizes = [3, 3, 3, 3]
+        if strides is None:
+            strides = [1, 1, 1, 1]
+        if pooling is None:
+            pooling = [2, 2, 2, 2]
 
         assert len(cnn_channels) == len(kernel_sizes) == len(strides) == len(pooling), (
             "All layer configuration lists must have the same length"
@@ -75,7 +85,7 @@ class CNNEncoder(nn.Module):
 
         # Calculate output feature dimension
         # After all pooling, the frequency dimension is reduced
-        # We'll flatten frequency × channels to get final feature dimension
+        # We'll flatten frequency x channels to get final feature dimension
         self._output_feature_dim = None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:

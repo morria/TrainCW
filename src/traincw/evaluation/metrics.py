@@ -8,7 +8,6 @@ This module provides:
 """
 
 from collections import defaultdict
-from typing import Optional
 
 
 def edit_distance(s1: str, s2: str) -> int:
@@ -221,9 +220,7 @@ def confusion_matrix(
     return dict(matrix)
 
 
-def _get_edit_operations(
-    s1: str, s2: str
-) -> list[tuple[str, Optional[str], Optional[str]]]:
+def _get_edit_operations(s1: str, s2: str) -> list[tuple[str, str | None, str | None]]:
     """
     Get the sequence of edit operations to transform s1 into s2.
 

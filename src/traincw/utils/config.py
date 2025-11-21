@@ -5,7 +5,7 @@ This module provides a flexible configuration system using dataclasses and YAML.
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -106,7 +106,7 @@ class DataConfig:
     """Data generation configuration (placeholder for future data generation)."""
 
     # Validation/test sets
-    validation_path: Optional[str] = None
+    validation_path: str | None = None
     test_paths: list[str] = field(default_factory=list)
 
     # Dataset parameters
@@ -139,7 +139,7 @@ class Config:
     log_dir: str = "logs"
 
     # Experiment
-    experiment_name: Optional[str] = None
+    experiment_name: str | None = None
     seed: int = 42
 
     @classmethod
@@ -252,7 +252,7 @@ class Config:
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path, "w") as f:
+        with Path.open(path, "w") as f:
             yaml.dump(self.to_dict(), f, default_flow_style=False, sort_keys=False)
 
 
@@ -276,7 +276,7 @@ def load_config(path: str | Path) -> Config:
     if not path.exists():
         raise FileNotFoundError(f"Config file not found: {path}")
 
-    with open(path) as f:
+    with Path.open(path) as f:
         config_dict = yaml.safe_load(f)
 
     return Config.from_dict(config_dict)
