@@ -192,7 +192,11 @@ def generate_cw_audio(
             audio_segments.append(np.zeros(n_samples))
 
     # Concatenate all segments
-    audio = np.concatenate(audio_segments)
+    audio = (
+        np.concatenate(audio_segments)
+        if audio_segments
+        else np.zeros(int(0.1 * sample_rate))  # Fallback for empty sequence
+    )
 
     return audio
 

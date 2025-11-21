@@ -76,6 +76,9 @@ Issues = "https://github.com/morria/TrainCW/issues"
 [project.scripts]
 traincw = "traincw.cli:main"
 
+[tool.setuptools]
+license-files = []  # Disable automatic license file inclusion to fix twine check
+
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["traincw*"]

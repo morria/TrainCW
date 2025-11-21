@@ -47,6 +47,10 @@ def generate_training_sample(
     target_length = sample_text_length()
     text = generate_random_text(length=target_length)
 
+    # Ensure we have at least some text
+    if not text or len(text.strip()) == 0:
+        text = "E"  # Fallback to single dit
+
     # 2. Select basic parameters
     wpm = sample_wpm(phase=phase)
     frequency = sample_frequency(phase=phase)
@@ -56,6 +60,13 @@ def generate_training_sample(
     timing_calc = TimingCalculator(wpm, timing_variance)
     elements = morse.text_to_elements(text)
     timing_sequence = timing_calc.get_timing_sequence(elements)
+
+    # Ensure timing sequence is not empty
+    if not timing_sequence:
+        # Fallback: generate a simple dit
+        elements = morse.text_to_elements("E")
+        timing_sequence = timing_calc.get_timing_sequence(elements)
+        text = "E"
 
     # Check duration and truncate if needed
     total_duration = sum(duration for duration, _ in timing_sequence)
@@ -82,6 +93,13 @@ def generate_training_sample(
         timing_sequence = truncated_sequence
         text = "".join(truncated_text)
         total_duration = current_duration
+
+        # If truncation resulted in empty sequence, use fallback
+        if not timing_sequence:
+            elements = morse.text_to_elements("E")
+            timing_sequence = timing_calc.get_timing_sequence(elements)
+            text = "E"
+            total_duration = sum(duration for duration, _ in timing_sequence)
 
     # 4. Sample envelope parameters
     rise_time = sample_rise_fall_time()

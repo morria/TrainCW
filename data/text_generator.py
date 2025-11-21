@@ -307,9 +307,10 @@ class TextGenerator:
             text = self.generate_random_characters(length)
             # Insert spaces randomly
             chars = list(text)
-            for _i in range(len(chars) // 5):
-                pos = np.random.randint(3, len(chars) - 3)
-                chars.insert(pos, " ")
+            if len(chars) > 6:  # Only insert spaces if we have enough characters
+                for _i in range(len(chars) // 5):
+                    pos = np.random.randint(3, len(chars) - 3)
+                    chars.insert(pos, " ")
             return "".join(chars)
 
         elif content_type == "random_words":
