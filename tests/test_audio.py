@@ -18,7 +18,7 @@ class TestMelSpectrogram:
 
     def test_compute_from_numpy(self):
         """Test computing spectrogram from numpy array."""
-        audio = np.random.randn(16000)  # noqa: NPY002
+        audio = np.random.randn(16000)
         spec = compute_mel_spectrogram(audio)
 
         assert isinstance(spec, torch.Tensor)
@@ -35,7 +35,7 @@ class TestMelSpectrogram:
 
     def test_normalization(self):
         """Test spectrogram normalization."""
-        audio = np.random.randn(16000)  # noqa: NPY002
+        audio = np.random.randn(16000)
 
         spec_normalized = compute_mel_spectrogram(audio, normalize=True)
         spec_unnormalized = compute_mel_spectrogram(audio, normalize=False)
@@ -48,7 +48,7 @@ class TestMelSpectrogram:
 
     def test_different_parameters(self):
         """Test with different audio parameters."""
-        audio = np.random.randn(8000)  # noqa: NPY002
+        audio = np.random.randn(8000)
 
         spec = compute_mel_spectrogram(
             audio,
@@ -64,7 +64,7 @@ class TestAudioNormalization:
 
     def test_normalize_numpy(self):
         """Test normalizing numpy array."""
-        audio = np.random.randn(16000) * 0.1  # noqa: NPY002
+        audio = np.random.randn(16000) * 0.1
         normalized = normalize_audio(audio, target_db=-20.0)
 
         assert isinstance(normalized, np.ndarray)
